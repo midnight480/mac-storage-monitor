@@ -1,0 +1,172 @@
+name: Check AI-DLC Upstream Updates
+
+on:
+  schedule:
+    # 毎日 09:00 UTC (日本時間 18:00) にチェック
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      force_update:
+        description: '強制的に最新リリースで更新する'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  check-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current tracked version
+        id: current
+        run: |
+          if [ -f .aidlc-version ]; then
+            echo "version=$(cat .aidlc-version)" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check latest upstream release
+        id: upstream
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST=$(gh api repos/awslabs/aidlc-workflows/releases/latest --jq '.tag_name')
+          echo "version=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "📦 最新上流リリース: $LATEST"
+
+      - name: Compare versions
+        id: compare
+        run: |
+          CURRENT="${{ steps.current.outputs.version }}"
+          LATEST="${{ steps.upstream.outputs.version }}"
+          FORCE="${{ inputs.force_update }}"
+
+          echo "現在のバージョン: $CURRENT"
+          echo "最新のバージョン: $LATEST"
+
+          if [ "$FORCE" = "true" ] || [ "$CURRENT" != "$LATEST" ]; then
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+            echo "✅ 更新が必要です"
+          else
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+            echo "⏭️ 既に最新です"
+          fi
+
+      - name: Download upstream release
+        if: steps.compare.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST="${{ steps.upstream.outputs.version }}"
+          echo "📥 リリース $LATEST をダウンロード中..."
+
+          # リリースのtarballをダウンロード
+          gh api repos/awslabs/aidlc-workflows/tarball/$LATEST > /tmp/aidlc-upstream.tar.gz
+
+          # 展開
+          mkdir -p /tmp/aidlc-upstream
+          tar -xzf /tmp/aidlc-upstream.tar.gz -C /tmp/aidlc-upstream --strip-components=1
+
+          echo "✅ ダウンロード完了"
+          ls /tmp/aidlc-upstream/
+
+      - name: Detect upstream file structure
+        if: steps.compare.outputs.needs_update == 'true'
+        id: structure
+        run: |
+          UPSTREAM="/tmp/aidlc-upstream"
+
+          # 上流のディレクトリ構造を検出
+          # aidlc-workflowsリポジトリの構造に応じてパスを特定
+          if [ -d "$UPSTREAM/rule-details" ]; then
+            echo "rule_details_path=$UPSTREAM/rule-details" >> "$GITHUB_OUTPUT"
+          elif [ -d "$UPSTREAM/aws-aidlc-rule-details" ]; then
+            echo "rule_details_path=$UPSTREAM/aws-aidlc-rule-details" >> "$GITHUB_OUTPUT"
+          elif [ -d "$UPSTREAM/aidlc-rule-details" ]; then
+            echo "rule_details_path=$UPSTREAM/aidlc-rule-details" >> "$GITHUB_OUTPUT"
+          else
+            # フォールバック: rule-detailsっぽいディレクトリを探す
+            FOUND=$(find "$UPSTREAM" -type d -name "common" -exec dirname {} \; | head -1)
+            if [ -n "$FOUND" ]; then
+              echo "rule_details_path=$FOUND" >> "$GITHUB_OUTPUT"
+            else
+              echo "::error::上流リポジトリからrule-detailsディレクトリが見つかりません"
+              echo "上流の構造:"
+              find "$UPSTREAM" -type d | head -30
+              exit 1
+            fi
+          fi
+
+          # core-workflow.mdの場所を検出
+          CORE_WF=$(find "$UPSTREAM" -name "core-workflow.md" -type f | head -1)
+          if [ -n "$CORE_WF" ]; then
+            echo "core_workflow_path=$CORE_WF" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning::core-workflow.md が見つかりません。rule-detailsのみ更新します。"
+            echo "core_workflow_path=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Update local files
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          RULE_DETAILS="${{ steps.structure.outputs.rule_details_path }}"
+          CORE_WF="${{ steps.structure.outputs.core_workflow_path }}"
+
+          # rule-detailsを更新
+          if [ -n "$RULE_DETAILS" ] && [ -d "$RULE_DETAILS" ]; then
+            echo "📂 rule-details を更新中..."
+            rm -rf .kiro/aws-aidlc-rule-details
+            cp -r "$RULE_DETAILS" .kiro/aws-aidlc-rule-details
+            echo "  ✅ .kiro/aws-aidlc-rule-details 更新完了"
+          fi
+
+          # core-workflow.mdを更新
+          if [ -n "$CORE_WF" ] && [ -f "$CORE_WF" ]; then
+            echo "📄 core-workflow.md を更新中..."
+            cp "$CORE_WF" .kiro/steering/aws-aidlc-rules/core-workflow.md
+            echo "  ✅ .kiro/steering/aws-aidlc-rules/core-workflow.md 更新完了"
+          fi
+
+          # バージョンファイルを更新
+          echo "${{ steps.upstream.outputs.version }}" > .aidlc-version
+
+          echo "✅ ローカルファイル更新完了"
+
+      - name: Run sync script
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          echo "🔄 sync-aidlc.sh を実行中..."
+          chmod +x scripts/sync-aidlc.sh
+          bash scripts/sync-aidlc.sh
+
+      - name: Commit and push to main
+        if: steps.compare.outputs.needs_update == 'true'
+        run: |
+          LATEST="${{ steps.upstream.outputs.version }}"
+          CURRENT="${{ steps.current.outputs.version }}"
+
+          # 変更があるか確認
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "⏭️ ファイルに変更がありません"
+            exit 0
+          fi
+
+          # mainに直接コミット・プッシュ
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          printf "chore: AI-DLC ワークフローを %s に更新\n\n上流リポジトリ (awslabs/aidlc-workflows) の新しいリリースを検知しました。\n\n- 前バージョン: %s\n- 新バージョン: %s\n- リリース: https://github.com/awslabs/aidlc-workflows/releases/tag/%s\n" \
+            "$LATEST" "$CURRENT" "$LATEST" "$LATEST" | git commit -F -
+
+          git push origin main
+
+          echo "✅ main に直接プッシュ完了 (${CURRENT} → ${LATEST})"

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- /Applications/ 内のアプリ読み取りアクセス -->
+	<key>com.apple.security.files.all-applications.read-only</key>
+	<true/>
+	<!-- ~/Library/ 配下の読み取りアクセス（他アプリの関連ファイルスキャン用） -->
+	<key>com.apple.security.temporary-exception.files.home-relative-path.read-only</key>
+	<array>
+		<string>Library/Application Support/</string>
+		<string>Library/Preferences/</string>
+		<string>Library/Containers/</string>
+		<string>Library/Logs/</string>
+		<string>Library/Saved Application State/</string>
+	</array>
+	<!-- Homebrew Caskroom パスの読み取りアクセス -->
+	<key>com.apple.security.temporary-exception.files.absolute-path.read-only</key>
+	<array>
+		<string>/opt/homebrew/Caskroom/</string>
+		<string>/usr/local/Caskroom/</string>
+		<string>/opt/homebrew/bin/brew</string>
+		<string>/usr/local/bin/brew</string>
+	</array>
+</dict>
+</plist>
