@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: '5.9'
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "📦 バージョン: $VERSION"
+
+      - name: Build release binary
+        run: swift build -c release
+
+      - name: Create .app bundle
+        run: |
+          APP_NAME="MacStorageMonitor"
+          BUILD_DIR=".build/release"
+          APP_BUNDLE="${APP_NAME}.app"
+          CONTENTS_DIR="${APP_BUNDLE}/Contents"
+          MACOS_DIR="${CONTENTS_DIR}/MacOS"
+          RESOURCES_DIR="${CONTENTS_DIR}/Resources"
+          VERSION="${{ steps.version.outputs.version }}"
+
+          rm -rf "${APP_BUNDLE}"
+          mkdir -p "${MACOS_DIR}"
+          mkdir -p "${RESOURCES_DIR}"
+
+          cp "${BUILD_DIR}/${APP_NAME}" "${MACOS_DIR}/${APP_NAME}"
+
+          cat > "${CONTENTS_DIR}/Info.plist" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>CFBundleDevelopmentRegion</key>
+              <string>ja</string>
+              <key>CFBundleExecutable</key>
+              <string>MacStorageMonitor</string>
+              <key>CFBundleIdentifier</key>
+              <string>com.local.MacStorageMonitor</string>
+              <key>CFBundleInfoDictionaryVersion</key>
+              <string>6.0</string>
+              <key>CFBundleName</key>
+              <string>Mac Storage Monitor</string>
+              <key>CFBundlePackageType</key>
+              <string>APPL</string>
+              <key>CFBundleShortVersionString</key>
+              <string>${VERSION}</string>
+              <key>CFBundleVersion</key>
+              <string>${VERSION}</string>
+              <key>LSMinimumSystemVersion</key>
+              <string>14.0</string>
+              <key>LSUIElement</key>
+              <true/>
+              <key>NSHighResolutionCapable</key>
+              <true/>
+          </dict>
+          </plist>
+          EOF
+
+          echo "✅ .app バンドル作成完了"
+
+      - name: Create ZIP archive
+        run: |
+          zip -r MacStorageMonitor.app.zip MacStorageMonitor.app
+          echo "✅ ZIP作成完了: $(du -h MacStorageMonitor.app.zip | cut -f1)"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Mac Storage Monitor ${{ github.ref_name }}"
+          body: |
+            ## Mac Storage Monitor ${{ github.ref_name }}
+
+            ### インストール方法
+            1. `MacStorageMonitor.app.zip` をダウンロード
+            2. ZIPを展開
+            3. `MacStorageMonitor.app` を `/Applications/` に移動
+            4. アプリを起動
+
+            ### 動作環境
+            - macOS 14 (Sonoma) 以降
+            - Apple Silicon (arm64)
+          files: MacStorageMonitor.app.zip
+          generate_release_notes: true

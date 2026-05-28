@@ -1,0 +1,13 @@
+{
+  "name": "Sync AI-DLC on Edit",
+  "version": "1.0.0",
+  "description": "Automatically syncs AI-DLC workflow definitions to all agent formats when the source steering file is edited",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["*.kiro/steering/aws-aidlc-rules/*.md", "*.kiro/aws-aidlc-rule-details/**/*.md"]
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "bash scripts/sync-aidlc.sh"
+  }
+}
