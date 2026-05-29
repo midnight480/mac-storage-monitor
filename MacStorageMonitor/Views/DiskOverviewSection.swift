@@ -6,7 +6,7 @@ struct DiskOverviewSection: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("ディスク使用状況")
+            Text(L10n.diskTitle)
                 .font(.headline)
             
             if let usage = diskUsage {
@@ -16,18 +16,21 @@ struct DiskOverviewSection: View {
                 
                 // 使用量テキスト
                 HStack {
-                    Text("使用中: \(FileSizeFormatter.format(usage.usedSpace)) / \(FileSizeFormatter.format(usage.totalCapacity))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text(L10n.diskUsed(
+                        FileSizeFormatter.format(usage.usedSpace),
+                        FileSizeFormatter.format(usage.totalCapacity)
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                     
                     Spacer()
                     
-                    Text("空き: \(FileSizeFormatter.format(usage.freeSpace))")
+                    Text(L10n.diskFree(FileSizeFormatter.format(usage.freeSpace)))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             } else {
-                Text("読み込み中...")
+                Text(L10n.diskLoading)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

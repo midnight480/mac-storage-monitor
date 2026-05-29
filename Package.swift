@@ -3,6 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "MacStorageMonitor",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -10,7 +11,10 @@ let package = Package(
         .executableTarget(
             name: "MacStorageMonitor",
             path: "MacStorageMonitor",
-            exclude: ["MacStorageMonitor.entitlements"]
+            exclude: ["MacStorageMonitor.entitlements"],
+            resources: [
+                .process("Resources")
+            ]
         )
     ]
 )

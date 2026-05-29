@@ -12,7 +12,7 @@ struct FooterSection: View {
         VStack(alignment: .leading, spacing: 8) {
             // 最終スキャン日時
             if let date = lastScanDate {
-                Text("最終スキャン: \(date.formatted(.dateTime.month().day().hour().minute()))")
+                Text(L10n.footerLastScan(date.formatted(.dateTime.month().day().hour().minute())))
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -28,7 +28,7 @@ struct FooterSection: View {
                             Image(systemName: "arrow.clockwise")
                                 .font(.caption)
                         }
-                        Text("再スキャン")
+                        Text(L10n.footerRescan)
                             .font(.caption)
                     }
                 }
@@ -39,7 +39,7 @@ struct FooterSection: View {
                 Spacer()
                 
                 // スキャン間隔設定
-                Picker("間隔:", selection: $scanInterval) {
+                Picker(L10n.footerInterval, selection: $scanInterval) {
                     ForEach(SettingsService.intervalPresets, id: \.value) { preset in
                         Text(preset.label).tag(preset.value)
                     }
@@ -49,14 +49,14 @@ struct FooterSection: View {
                 .frame(width: 130)
             }
             
-            // 終了ボタン
+            // 設定・終了ボタン
             HStack {
                 Spacer()
                 Button(action: onOpenSettings) {
                     HStack(spacing: 4) {
                         Image(systemName: "gearshape")
                             .font(.caption)
-                        Text("設定")
+                        Text(L10n.footerSettings)
                             .font(.caption)
                     }
                 }
@@ -67,7 +67,7 @@ struct FooterSection: View {
                 Spacer()
                     .frame(width: 12)
                 
-                Button("終了") {
+                Button(L10n.footerQuit) {
                     NSApplication.shared.terminate(nil)
                 }
                 .buttonStyle(.plain)
