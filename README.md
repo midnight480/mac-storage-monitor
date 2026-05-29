@@ -104,4 +104,4 @@ MacStorageMonitor/
 
 ## ライセンス
 
-Private repository.
+[MIT License](LICENSE)
