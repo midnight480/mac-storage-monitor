@@ -1,0 +1,35 @@
+/* Disk Overview */
+"disk.title" = "ディスク使用状況";
+"disk.used" = "使用中: %@ / %@";
+"disk.free" = "空き: %@";
+"disk.loading" = "読み込み中...";
+
+/* App List */
+"appList.title" = "TOP 10 アプリ使用量";
+"appList.scanning" = "スキャン中...";
+"appList.noData" = "データなし";
+"appList.error" = "エラー: %@";
+
+/* Footer */
+"footer.lastScan" = "最終スキャン: %@";
+"footer.rescan" = "再スキャン";
+"footer.interval" = "間隔:";
+"footer.settings" = "設定";
+"footer.quit" = "終了";
+
+/* Settings */
+"settings.title" = "設定";
+"settings.general" = "一般";
+"settings.launchAtLogin" = "ログイン時に自動起動";
+"settings.scanInterval" = "スキャン間隔";
+
+/* Interval Presets */
+"interval.5min" = "5分";
+"interval.15min" = "15分";
+"interval.30min" = "30分";
+"interval.1hour" = "1時間";
+"interval.6hours" = "6時間";
+"interval.24hours" = "24時間";
+
+/* Install Source */
+"installSource.unknown" = "不明";

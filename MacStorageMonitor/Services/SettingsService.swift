@@ -53,12 +53,14 @@ final class SettingsService {
     // MARK: - スキャン間隔プリセット
     
     /// UI表示用のスキャン間隔プリセット
-    static let intervalPresets: [(label: String, value: TimeInterval)] = [
-        ("5分", 300),
-        ("15分", 900),
-        ("30分", 1800),
-        ("1時間", 3600),
-        ("6時間", 21600),
-        ("24時間", 86400)
-    ]
+    static var intervalPresets: [(label: String, value: TimeInterval)] {
+        [
+            (L10n.interval5min, 300),
+            (L10n.interval15min, 900),
+            (L10n.interval30min, 1800),
+            (L10n.interval1hour, 3600),
+            (L10n.interval6hours, 21600),
+            (L10n.interval24hours, 86400)
+        ]
+    }
 }

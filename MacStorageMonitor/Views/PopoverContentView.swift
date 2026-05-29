@@ -6,15 +6,19 @@ struct PopoverContentView: View {
     @State private var showSettings = false
     
     var body: some View {
-        if showSettings {
-            SettingsView(
-                launchAtLogin: $viewModel.launchAtLogin,
-                scanInterval: $viewModel.scanInterval,
-                onDismiss: { showSettings = false }
-            )
-        } else {
-            mainContent
+        VStack(alignment: .leading, spacing: 12) {
+            if showSettings {
+                SettingsView(
+                    launchAtLogin: $viewModel.launchAtLogin,
+                    scanInterval: $viewModel.scanInterval,
+                    onDismiss: { showSettings = false }
+                )
+            } else {
+                mainContent
+            }
         }
+        .padding(16)
+        .frame(width: 320)
     }
     
     private var mainContent: some View {
@@ -42,28 +46,26 @@ struct PopoverContentView: View {
                 onOpenSettings: { showSettings = true }
             )
         }
-        .padding(16)
-        .frame(width: 320)
     }
     
     @ViewBuilder
     private var appListSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("TOP 10 アプリ使用量")
+            Text(L10n.appListTitle)
                 .font(.headline)
             
             if viewModel.isScanning && viewModel.appStorageList.isEmpty {
                 HStack {
                     ProgressView()
                         .scaleEffect(0.7)
-                    Text("スキャン中...")
+                    Text(L10n.appListScanning)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.vertical, 20)
             } else if viewModel.appStorageList.isEmpty {
-                Text("データなし")
+                Text(L10n.appListNoData)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
@@ -77,7 +79,7 @@ struct PopoverContentView: View {
             }
             
             if let error = viewModel.errorMessage {
-                Text("エラー: \(error)")
+                Text(L10n.appListError(error))
                     .font(.caption2)
                     .foregroundStyle(.red)
             }
