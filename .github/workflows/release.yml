@@ -33,7 +33,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           APP_NAME="MacStorageMonitor"
-          BUILD_DIR=".build/release"
+          BUILD_DIR=".build/arm64-apple-macosx/release"
           APP_BUNDLE="${APP_NAME}.app"
           CONTENTS_DIR="${APP_BUNDLE}/Contents"
           MACOS_DIR="${CONTENTS_DIR}/MacOS"
@@ -43,8 +43,25 @@ jobs:
           mkdir -p "${MACOS_DIR}"
           mkdir -p "${RESOURCES_DIR}"
 
+          # バイナリをコピー
           cp "${BUILD_DIR}/${APP_NAME}" "${MACOS_DIR}/${APP_NAME}"
 
+          # リソースバンドルをコピー（ローカライズファイル含む）
+          RESOURCE_BUNDLE="${BUILD_DIR}/${APP_NAME}_${APP_NAME}.bundle"
+          if [ -d "${RESOURCE_BUNDLE}" ]; then
+            cp -R "${RESOURCE_BUNDLE}" "${RESOURCES_DIR}/"
+            echo "✅ リソースバンドルをコピー: ${RESOURCE_BUNDLE}"
+          else
+            echo "⚠️ リソースバンドルが見つかりません: ${RESOURCE_BUNDLE}"
+            # フォールバック: .build/release から探す
+            FALLBACK_BUNDLE=".build/release/${APP_NAME}_${APP_NAME}.bundle"
+            if [ -d "${FALLBACK_BUNDLE}" ]; then
+              cp -R "${FALLBACK_BUNDLE}" "${RESOURCES_DIR}/"
+              echo "✅ フォールバックリソースバンドルをコピー"
+            fi
+          fi
+
+          # Info.plist 生成
           /usr/libexec/PlistBuddy -c "Add :CFBundleDevelopmentRegion string ja" "${CONTENTS_DIR}/Info.plist"
           /usr/libexec/PlistBuddy -c "Add :CFBundleExecutable string MacStorageMonitor" "${CONTENTS_DIR}/Info.plist"
           /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string com.local.MacStorageMonitor" "${CONTENTS_DIR}/Info.plist"
@@ -58,10 +75,18 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :NSHighResolutionCapable bool true" "${CONTENTS_DIR}/Info.plist"
 
           echo "✅ .app バンドル作成完了"
+          echo "📂 バンドル内容:"
+          find "${APP_BUNDLE}" -type f
+
+      - name: Sign .app bundle (ad-hoc)
+        run: |
+          codesign --force --deep --sign - MacStorageMonitor.app
+          echo "✅ アドホック署名完了"
+          codesign --verify --verbose MacStorageMonitor.app
 
       - name: Create ZIP archive
         run: |
-          zip -r MacStorageMonitor.app.zip MacStorageMonitor.app
+          ditto -c -k --keepParent MacStorageMonitor.app MacStorageMonitor.app.zip
           echo "✅ ZIP作成完了: $(du -h MacStorageMonitor.app.zip | cut -f1)"
 
       - name: Create GitHub Release
@@ -75,7 +100,9 @@ jobs:
             1. `MacStorageMonitor.app.zip` をダウンロード
             2. ZIPを展開
             3. `MacStorageMonitor.app` を `/Applications/` に移動
-            4. アプリを起動
+            4. 初回起動時に「開発元を確認できない」と表示された場合:
+               - システム設定 > プライバシーとセキュリティ > 「このまま開く」をクリック
+            5. アプリを起動
 
             ### 動作環境
             - macOS 14 (Sonoma) 以降
