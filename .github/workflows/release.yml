@@ -10,15 +10,13 @@ permissions:
 
 jobs:
   build-and-release:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: '5.9'
+      - name: Show Swift version
+        run: swift --version
 
       - name: Extract version from tag
         id: version
@@ -31,6 +29,8 @@ jobs:
         run: swift build -c release
 
       - name: Create .app bundle
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
           APP_NAME="MacStorageMonitor"
           BUILD_DIR=".build/release"
@@ -38,7 +38,6 @@ jobs:
           CONTENTS_DIR="${APP_BUNDLE}/Contents"
           MACOS_DIR="${CONTENTS_DIR}/MacOS"
           RESOURCES_DIR="${CONTENTS_DIR}/Resources"
-          VERSION="${{ steps.version.outputs.version }}"
 
           rm -rf "${APP_BUNDLE}"
           mkdir -p "${MACOS_DIR}"
@@ -46,36 +45,17 @@ jobs:
 
           cp "${BUILD_DIR}/${APP_NAME}" "${MACOS_DIR}/${APP_NAME}"
 
-          cat > "${CONTENTS_DIR}/Info.plist" << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-              <key>CFBundleDevelopmentRegion</key>
-              <string>ja</string>
-              <key>CFBundleExecutable</key>
-              <string>MacStorageMonitor</string>
-              <key>CFBundleIdentifier</key>
-              <string>com.local.MacStorageMonitor</string>
-              <key>CFBundleInfoDictionaryVersion</key>
-              <string>6.0</string>
-              <key>CFBundleName</key>
-              <string>Mac Storage Monitor</string>
-              <key>CFBundlePackageType</key>
-              <string>APPL</string>
-              <key>CFBundleShortVersionString</key>
-              <string>${VERSION}</string>
-              <key>CFBundleVersion</key>
-              <string>${VERSION}</string>
-              <key>LSMinimumSystemVersion</key>
-              <string>14.0</string>
-              <key>LSUIElement</key>
-              <true/>
-              <key>NSHighResolutionCapable</key>
-              <true/>
-          </dict>
-          </plist>
-          EOF
+          /usr/libexec/PlistBuddy -c "Add :CFBundleDevelopmentRegion string ja" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleExecutable string MacStorageMonitor" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string com.local.MacStorageMonitor" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleInfoDictionaryVersion string 6.0" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleName string Mac Storage Monitor" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundlePackageType string APPL" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string ${VERSION}" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :CFBundleVersion string ${VERSION}" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :LSMinimumSystemVersion string 14.0" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" "${CONTENTS_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Add :NSHighResolutionCapable bool true" "${CONTENTS_DIR}/Info.plist"
 
           echo "✅ .app バンドル作成完了"
 
