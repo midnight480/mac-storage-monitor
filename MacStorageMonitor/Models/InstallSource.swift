@@ -13,7 +13,7 @@ enum InstallSource: String, Codable, CaseIterable {
         case .homebrew: return "Homebrew"
         case .appStore: return "App Store"
         case .directDownload: return "Direct"
-        case .unknown: return "不明"
+        case .unknown: return L10n.installSourceUnknown
         }
     }
     

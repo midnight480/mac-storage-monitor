@@ -1,0 +1,35 @@
+/* Disk Overview */
+"disk.title" = "Disk Usage";
+"disk.used" = "Used: %@ / %@";
+"disk.free" = "Free: %@";
+"disk.loading" = "Loading...";
+
+/* App List */
+"appList.title" = "TOP 10 App Storage";
+"appList.scanning" = "Scanning...";
+"appList.noData" = "No data";
+"appList.error" = "Error: %@";
+
+/* Footer */
+"footer.lastScan" = "Last scan: %@";
+"footer.rescan" = "Rescan";
+"footer.interval" = "Interval:";
+"footer.settings" = "Settings";
+"footer.quit" = "Quit";
+
+/* Settings */
+"settings.title" = "Settings";
+"settings.general" = "General";
+"settings.launchAtLogin" = "Launch at Login";
+"settings.scanInterval" = "Scan Interval";
+
+/* Interval Presets */
+"interval.5min" = "5 min";
+"interval.15min" = "15 min";
+"interval.30min" = "30 min";
+"interval.1hour" = "1 hour";
+"interval.6hours" = "6 hours";
+"interval.24hours" = "24 hours";
+
+/* Install Source */
+"installSource.unknown" = "Unknown";

@@ -10,7 +10,7 @@ struct SettingsView: View {
         VStack(alignment: .leading, spacing: 16) {
             // ヘッダー
             HStack {
-                Text("設定")
+                Text(L10n.settingsTitle)
                     .font(.headline)
                 Spacer()
                 Button(action: onDismiss) {
@@ -26,18 +26,18 @@ struct SettingsView: View {
             
             // 一般設定セクション
             VStack(alignment: .leading, spacing: 12) {
-                Text("一般")
+                Text(L10n.settingsGeneral)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 
                 // ログイン時自動起動トグル
-                Toggle("ログイン時に自動起動", isOn: $launchAtLogin)
+                Toggle(L10n.settingsLaunchAtLogin, isOn: $launchAtLogin)
                     .toggleStyle(.switch)
                     .accessibilityIdentifier("settings-launch-at-login-toggle")
                 
                 // スキャン間隔設定
                 HStack {
-                    Text("スキャン間隔")
+                    Text(L10n.settingsScanInterval)
                     Spacer()
                     Picker("", selection: $scanInterval) {
                         ForEach(SettingsService.intervalPresets, id: \.value) { preset in
@@ -52,7 +52,5 @@ struct SettingsView: View {
             
             Spacer()
         }
-        .padding(16)
-        .frame(width: 320, height: 200)
     }
 }
