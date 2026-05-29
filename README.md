@@ -25,12 +25,29 @@ macOS メニューバーに常駐し、ディスク使用量とアプリごと�
 Swift Package Manager を使用しています。
 
 ```bash
-# ビルド
+# デバッグビルド
 swift build
 
 # リリースビルド
 swift build -c release
 ```
+
+## .app バンドルの作成とインストール
+
+ローカルでビルドして `.app` を生成します。
+
+```bash
+# .app バンドルを生成
+./scripts/build-app.sh
+
+# /Applications にインストール
+cp -r MacStorageMonitor.app /Applications/
+
+# または直接起動
+open MacStorageMonitor.app
+```
+
+> **Note**: コード署名の都合上、GitHub Actions でのビルド配布は行っていません。ローカルでビルドしてご利用ください。
 
 ## プロジェクト構成
 
@@ -87,4 +104,4 @@ MacStorageMonitor/
 
 ## ライセンス
 
-Private repository.
+[MIT License](LICENSE)
