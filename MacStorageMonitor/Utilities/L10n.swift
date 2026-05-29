@@ -20,7 +20,19 @@ enum L10n {
     static func appListError(_ error: String) -> String {
         String(format: localized("appList.error"), error)
     }
-    
+
+    // MARK: - Other Apps (beyond TOP10)
+    static var otherAppsTitle: String { localized("otherApps.title") }
+    static var otherAppsSubtitle: String { localized("otherApps.subtitle") }
+    static var otherAppsButton: String { localized("otherApps.button") }
+    static func otherAppsCount(_ count: Int) -> String {
+        String(format: localized("otherApps.count"), count)
+    }
+    static func otherAppsTotal(_ total: String) -> String {
+        String(format: localized("otherApps.total"), total)
+    }
+    static var otherAppsEmpty: String { localized("otherApps.empty") }
+
     // MARK: - Footer
     static func footerLastScan(_ date: String) -> String {
         String(format: localized("footer.lastScan"), date)

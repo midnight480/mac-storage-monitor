@@ -10,6 +10,14 @@
 "appList.noData" = "No data";
 "appList.error" = "Error: %@";
 
+/* Other Apps (beyond TOP10) */
+"otherApps.title" = "Apps Beyond Top 10";
+"otherApps.subtitle" = "Apps 1 MB or larger beyond Top 10";
+"otherApps.button" = "Show Apps Beyond Top 10";
+"otherApps.count" = "%d apps";
+"otherApps.total" = "Total: %@";
+"otherApps.empty" = "No apps to show";
+
 /* Footer */
 "footer.lastScan" = "Last scan: %@";
 "footer.rescan" = "Rescan";

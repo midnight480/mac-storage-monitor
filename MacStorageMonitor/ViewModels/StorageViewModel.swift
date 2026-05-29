@@ -11,6 +11,17 @@ final class StorageViewModel: ObservableObject {
     
     /// アプリ使用量TOP10リスト
     @Published var appStorageList: [AppDisplayItem] = []
+
+    /// TOP10以外で1MB以上のアプリリスト（サイズ降順）
+    @Published var otherAppsList: [AppDisplayItem] = []
+
+    /// 1MBのバイト数（10進。FileSizeFormatterの表示単位に合わせる）
+    static let oneMegabyteInBytes: Int64 = 1_000_000
+
+    /// TOP10以外アプリの合計サイズ（バイト）
+    var otherAppsTotalBytes: Int64 {
+        otherAppsList.reduce(0) { $0 + $1.totalSize }
+    }
     
     /// ディスク全体情報
     @Published var diskUsage: DiskUsageInfo?
@@ -98,16 +109,13 @@ final class StorageViewModel: ObservableObject {
             
             // TOP10取得してUI用モデルに変換
             let topRecords = try storageService.getTopApps(limit: 10)
-            appStorageList = topRecords.map { record in
-                AppDisplayItem(
-                    id: record.bundleIdentifier,
-                    name: record.name,
-                    appPath: record.appPath,
-                    totalSize: record.totalSize,
-                    installSource: record.installSource
-                )
-            }
+            appStorageList = topRecords.map(Self.makeDisplayItem)
             print("[ViewModel] TOP10取得: \(appStorageList.count) 件")
+
+            // TOP10以外で1MB以上のアプリを取得
+            let otherRecords = try storageService.getAppsBeyondTop10(minBytes: Self.oneMegabyteInBytes)
+            otherAppsList = otherRecords.map(Self.makeDisplayItem)
+            print("[ViewModel] TOP10以外(1MB以上): \(otherAppsList.count) 件")
             
             lastScanDate = Date()
         } catch {
@@ -139,19 +147,24 @@ final class StorageViewModel: ObservableObject {
     private func loadCachedData() async {
         do {
             let topRecords = try storageService.getTopApps(limit: 10)
-            appStorageList = topRecords.map { record in
-                AppDisplayItem(
-                    id: record.bundleIdentifier,
-                    name: record.name,
-                    appPath: record.appPath,
-                    totalSize: record.totalSize,
-                    installSource: record.installSource
-                )
-            }
+            appStorageList = topRecords.map(Self.makeDisplayItem)
+            let otherRecords = try storageService.getAppsBeyondTop10(minBytes: Self.oneMegabyteInBytes)
+            otherAppsList = otherRecords.map(Self.makeDisplayItem)
             diskUsage = try await storageService.getDiskOverview()
         } catch {
             // 初回起動時はデータなしで問題ない
         }
+    }
+
+    /// AppStorageRecord を UI 表示用モデルに変換する
+    private static func makeDisplayItem(_ record: AppStorageRecord) -> AppDisplayItem {
+        AppDisplayItem(
+            id: record.bundleIdentifier,
+            name: record.name,
+            appPath: record.appPath,
+            totalSize: record.totalSize,
+            installSource: record.installSource
+        )
     }
 }
 
