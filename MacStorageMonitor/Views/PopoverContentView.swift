@@ -4,6 +4,7 @@ import SwiftUI
 struct PopoverContentView: View {
     @ObservedObject var viewModel: StorageViewModel
     @State private var showSettings = false
+    @State private var showOtherApps = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -12,6 +13,12 @@ struct PopoverContentView: View {
                     launchAtLogin: $viewModel.launchAtLogin,
                     scanInterval: $viewModel.scanInterval,
                     onDismiss: { showSettings = false }
+                )
+            } else if showOtherApps {
+                OtherAppsView(
+                    apps: viewModel.otherAppsList,
+                    totalBytes: viewModel.otherAppsTotalBytes,
+                    onDismiss: { showOtherApps = false }
                 )
             } else {
                 mainContent
@@ -77,7 +84,34 @@ struct PopoverContentView: View {
                     }
                 }
             }
-            
+
+            // TOP10以外で1MB以上のアプリがある場合は別画面への導線を表示
+            if !viewModel.otherAppsList.isEmpty {
+                Button {
+                    showOtherApps = true
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.caption)
+                        Text(L10n.otherAppsButton)
+                            .font(.caption)
+                        Spacer()
+                        Text("\(viewModel.otherAppsList.count)")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.tint)
+                .padding(.top, 2)
+                .accessibilityIdentifier("show-other-apps-button")
+            }
+
             if let error = viewModel.errorMessage {
                 Text(L10n.appListError(error))
                     .font(.caption2)

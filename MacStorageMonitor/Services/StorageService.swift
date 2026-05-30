@@ -108,6 +108,15 @@ final class StorageService {
         descriptor.fetchLimit = limit
         return try modelContext.fetch(descriptor)
     }
+
+    /// TOP10以外で指定サイズ以上のアプリをサイズ降順で取得
+    func getAppsBeyondTop10(minBytes: Int64) throws -> [AppStorageRecord] {
+        let descriptor = FetchDescriptor<AppStorageRecord>(
+            sortBy: [SortDescriptor(\.totalSize, order: .reverse)]
+        )
+        let allRecords = try modelContext.fetch(descriptor)
+        return Array(allRecords.dropFirst(10)).filter { $0.totalSize >= minBytes }
+    }
     
     /// ディスク全体の使用量情報を取得
     func getDiskOverview() async throws -> DiskUsageInfo {

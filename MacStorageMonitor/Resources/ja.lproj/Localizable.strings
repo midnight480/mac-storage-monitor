@@ -10,6 +10,14 @@
 "appList.noData" = "データなし";
 "appList.error" = "エラー: %@";
 
+/* Other Apps (beyond TOP10) */
+"otherApps.title" = "TOP10以外のアプリ";
+"otherApps.subtitle" = "TOP10以外で1MB以上のアプリ";
+"otherApps.button" = "TOP10以外のアプリを表示";
+"otherApps.count" = "%d 件";
+"otherApps.total" = "合計: %@";
+"otherApps.empty" = "該当するアプリはありません";
+
 /* Footer */
 "footer.lastScan" = "最終スキャン: %@";
 "footer.rescan" = "再スキャン";
