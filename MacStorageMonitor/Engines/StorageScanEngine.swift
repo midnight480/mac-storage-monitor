@@ -123,7 +123,7 @@ actor StorageScanEngine {
         // Saved Application State
         let savedStateURL = libraryURL("Saved Application State")
             .appendingPathComponent("\(bundleIdentifier).savedState")
-        if fileManager.fileExists(atPath: savedStateURL.path) {
+        if isDirectory(at: savedStateURL) {
             let size = calculateDirectorySize(at: savedStateURL)
             if size > 0 {
                 relatedFiles.append(ScannedApp.RelatedFile(url: savedStateURL, size: size, category: .savedState))
@@ -173,13 +173,13 @@ actor StorageScanEngine {
         in directory: URL,
         category: FileCategory
     ) -> [ScannedApp.RelatedFile] {
-        guard fileManager.fileExists(atPath: directory.path) else { return [] }
+        guard isDirectory(at: directory) else { return [] }
         
         var results: [ScannedApp.RelatedFile] = []
         
         // バンドルIDで検索
         let bundleIDPath = directory.appendingPathComponent(bundleIdentifier)
-        if fileManager.fileExists(atPath: bundleIDPath.path) {
+        if isDirectory(at: bundleIDPath) {
             let size = calculateDirectorySize(at: bundleIDPath)
             if size > 0 {
                 results.append(ScannedApp.RelatedFile(url: bundleIDPath, size: size, category: category))
@@ -188,7 +188,7 @@ actor StorageScanEngine {
         
         // アプリ名で検索（バンドルIDと異なる場合のみ）
         let appNamePath = directory.appendingPathComponent(appName)
-        if appNamePath.path != bundleIDPath.path && fileManager.fileExists(atPath: appNamePath.path) {
+        if appNamePath.path != bundleIDPath.path && isDirectory(at: appNamePath) {
             let size = calculateDirectorySize(at: appNamePath)
             if size > 0 {
                 results.append(ScannedApp.RelatedFile(url: appNamePath, size: size, category: category))
@@ -201,7 +201,7 @@ actor StorageScanEngine {
     /// PreferencesディレクトリでバンドルIDに一致するplistファイルを検索
     private func findPreferenceFiles(bundleIdentifier: String) -> [ScannedApp.RelatedFile] {
         let prefsDir = libraryURL("Preferences")
-        guard fileManager.fileExists(atPath: prefsDir.path) else { return [] }
+        guard isDirectory(at: prefsDir) else { return [] }
         
         var results: [ScannedApp.RelatedFile] = []
         
@@ -276,6 +276,16 @@ actor StorageScanEngine {
         precondition(!subdirectory.contains(".."), "Path traversal detected in subdirectory: '\(subdirectory)'")
         let homeDir = fileManager.homeDirectoryForCurrentUser
         return homeDir.appendingPathComponent("Library/\(subdirectory)")
+    }
+    
+    /// シンボリックリンクを追跡せずにディレクトリの存在を確認する（TOCTOU対策）
+    private func isDirectory(at url: URL) -> Bool {
+        var isDir: ObjCBool = false
+        guard fileManager.fileExists(atPath: url.path, isDirectory: &isDir) else { return false }
+        guard isDir.boolValue else { return false }
+        // シンボリックリンクでないことを確認
+        let attributes = try? fileManager.attributesOfItem(atPath: url.path)
+        return attributes?[.type] as? FileAttributeType != .typeSymbolicLink
     }
 }
 

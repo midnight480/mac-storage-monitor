@@ -12,17 +12,19 @@ on:
         default: 'false'
         type: boolean
 
-permissions:
-  contents: write
+permissions: {}
 
 jobs:
   check-update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
 
       - name: Get current tracked version
         id: current

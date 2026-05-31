@@ -94,7 +94,7 @@ actor InstallSourceDetector {
     
     /// `brew list --cask` コマンドを実行して結果をパースする
     private func executeBrewListCask() -> Set<String>? {
-        // brewのパスを検出
+        // brewのパスを検出（絶対パスのみ許可）
         let brewPaths = ["/opt/homebrew/bin/brew", "/usr/local/bin/brew"]
         guard let brewPath = brewPaths.first(where: { fileManager.fileExists(atPath: $0) }) else {
             return nil
@@ -103,6 +103,7 @@ actor InstallSourceDetector {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: brewPath)
         process.arguments = ["list", "--cask"]
+        // セキュリティ: 環境変数をクリアしてPATH操作攻撃を防止
         process.environment = [:]
         
         let pipe = Pipe()
@@ -113,6 +114,7 @@ actor InstallSourceDetector {
             try process.run()
 
             // デッドロック防止: パイプの読み取りをプロセス終了待ちの前に実行
+            // パイプバッファが満杯になるとプロセスがブロックされるため
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
 
             // タイムアウト付きでプロセス終了を待機
