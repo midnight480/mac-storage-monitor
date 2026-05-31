@@ -111,18 +111,14 @@ actor InstallSourceDetector {
         process.standardError = Pipe()
         
         do {
-            let group = DispatchGroup()
-            group.enter()
-            process.terminationHandler = { _ in group.leave() }
-
             try process.run()
 
-            if group.wait(timeout: .now() + brewTimeout) == .timedOut {
-                process.terminate()
-                return nil
-            }
-            
+            // デッドロック防止: パイプの読み取りをプロセス終了待ちの前に実行する
+            // パイプバッファが満杯になるとプロセスがブロックされるため
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
+
+            process.waitUntilExit()
+            guard process.terminationStatus == 0 else { return nil }
             guard let output = String(data: data, encoding: .utf8) else { return nil }
             
             let casks = output
