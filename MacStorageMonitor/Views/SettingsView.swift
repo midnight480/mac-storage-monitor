@@ -3,7 +3,7 @@ import SwiftUI
 /// 設定画面ビュー
 struct SettingsView: View {
     @Binding var launchAtLogin: Bool
-    @Binding var scanInterval: TimeInterval
+    @Binding var language: SettingsService.AppLanguage
     let onDismiss: () -> Void
     
     var body: some View {
@@ -35,18 +35,18 @@ struct SettingsView: View {
                     .toggleStyle(.switch)
                     .accessibilityIdentifier("settings-launch-at-login-toggle")
                 
-                // スキャン間隔設定
+                // 言語設定
                 HStack {
-                    Text(L10n.settingsScanInterval)
+                    Text(L10n.settingsLanguage)
                     Spacer()
-                    Picker("", selection: $scanInterval) {
-                        ForEach(SettingsService.intervalPresets, id: \.value) { preset in
-                            Text(preset.label).tag(preset.value)
-                        }
+                    Picker("", selection: $language) {
+                        Text(L10n.settingsLanguageSystem).tag(SettingsService.AppLanguage.system)
+                        Text(L10n.settingsLanguageJa).tag(SettingsService.AppLanguage.ja)
+                        Text(L10n.settingsLanguageEn).tag(SettingsService.AppLanguage.en)
                     }
                     .pickerStyle(.menu)
-                    .frame(width: 100)
-                    .accessibilityIdentifier("settings-scan-interval-picker")
+                    .frame(width: 120)
+                    .accessibilityIdentifier("settings-language-picker")
                 }
             }
             

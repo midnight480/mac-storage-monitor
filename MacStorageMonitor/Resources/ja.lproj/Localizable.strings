@@ -30,6 +30,10 @@
 "settings.general" = "一般";
 "settings.launchAtLogin" = "ログイン時に自動起動";
 "settings.scanInterval" = "スキャン間隔";
+"settings.language" = "言語";
+"settings.language.system" = "システム設定";
+"settings.language.ja" = "日本語";
+"settings.language.en" = "English";
 
 /* Interval Presets */
 "interval.5min" = "5分";

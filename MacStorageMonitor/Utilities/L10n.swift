@@ -59,9 +59,30 @@ enum L10n {
     // MARK: - Install Source
     static var installSourceUnknown: String { localized("installSource.unknown") }
     
+    // MARK: - Settings (Language)
+    static var settingsLanguage: String { localized("settings.language") }
+    static var settingsLanguageSystem: String { localized("settings.language.system") }
+    static var settingsLanguageJa: String { localized("settings.language.ja") }
+    static var settingsLanguageEn: String { localized("settings.language.en") }
+    
     // MARK: - Private
     
     private static func localized(_ key: String) -> String {
-        NSLocalizedString(key, bundle: .module, comment: "")
+        let bundle = resolvedBundle()
+        return NSLocalizedString(key, bundle: bundle, comment: "")
+    }
+    
+    private static func resolvedBundle() -> Bundle {
+        let lang = SettingsService().language
+        switch lang {
+        case .system:
+            return .module
+        case .ja, .en:
+            if let path = Bundle.module.path(forResource: lang.rawValue, ofType: "lproj"),
+               let bundle = Bundle(path: path) {
+                return bundle
+            }
+            return .module
+        }
     }
 }

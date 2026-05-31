@@ -2,6 +2,7 @@ import Foundation
 import SwiftData
 import Combine
 import AppKit
+import os
 
 /// メインViewModel — UI状態管理、スキャン実行、TOP10提供
 @MainActor
@@ -47,11 +48,19 @@ final class StorageViewModel: ObservableObject {
             do {
                 try launchAtLoginService.setEnabled(launchAtLogin)
             } catch {
-                print("[ViewModel] ログイン時自動起動の設定に失敗: \(error)")
+                logger.error("Failed to set launch at login: \(error.localizedDescription)")
                 // 失敗時は元の状態に戻す
                 launchAtLogin = launchAtLoginService.isEnabled
                 settingsService.launchAtLogin = launchAtLogin
             }
+        }
+    }
+    
+    /// アプリ内言語設定
+    @Published var language: SettingsService.AppLanguage {
+        didSet {
+            settingsService.language = language
+            objectWillChange.send()
         }
     }
     
@@ -64,6 +73,7 @@ final class StorageViewModel: ObservableObject {
     private let scheduler: ScanSchedulerService
     private let settingsService: SettingsService
     private let launchAtLoginService: LaunchAtLoginService
+    private let logger = Logger(subsystem: "com.mac-storage-monitor", category: "ViewModel")
     
     // MARK: - 初期化
     
@@ -73,6 +83,7 @@ final class StorageViewModel: ObservableObject {
         self.scanInterval = settingsService.scanInterval
         self.launchAtLoginService = LaunchAtLoginService.shared
         self.launchAtLogin = LaunchAtLoginService.shared.isEnabled
+        self.language = settingsService.language
         self.storageService = StorageService(modelContext: modelContext)
         self.scheduler = ScanSchedulerService(interval: settingsService.scanInterval)
         
@@ -101,26 +112,26 @@ final class StorageViewModel: ObservableObject {
         do {
             // ディスク情報取得
             diskUsage = try await storageService.getDiskOverview()
-            print("[ViewModel] ディスク情報取得完了: \(diskUsage?.usagePercentage ?? 0)%")
+            logger.info("Disk info retrieved: \(self.diskUsage?.usagePercentage ?? 0)%")
             
             // フルスキャン実行
             let results = try await storageService.performFullScan()
-            print("[ViewModel] フルスキャン完了: \(results.count) アプリ")
+            logger.info("Full scan completed: \(results.count) apps")
             
             // TOP10取得してUI用モデルに変換
             let topRecords = try storageService.getTopApps(limit: 10)
             appStorageList = topRecords.map(Self.makeDisplayItem)
-            print("[ViewModel] TOP10取得: \(appStorageList.count) 件")
+            logger.info("Top 10 retrieved: \(self.appStorageList.count) items")
 
             // TOP10以外で1MB以上のアプリを取得
             let otherRecords = try storageService.getAppsBeyondTop10(minBytes: Self.oneMegabyteInBytes)
             otherAppsList = otherRecords.map(Self.makeDisplayItem)
-            print("[ViewModel] TOP10以外(1MB以上): \(otherAppsList.count) 件")
+            logger.info("Other apps (>=1MB): \(self.otherAppsList.count) items")
             
             lastScanDate = Date()
         } catch {
             errorMessage = error.localizedDescription
-            print("[ViewModel] エラー: \(error)")
+            logger.error("Scan error: \(error.localizedDescription)")
         }
         
         isScanning = false

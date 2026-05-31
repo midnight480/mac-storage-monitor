@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import os
 
 /// ストレージスキャンの統合オーケストレーター
 /// StorageScanEngine と InstallSourceDetector を組み合わせてスキャンを実行し、
@@ -10,6 +11,7 @@ final class StorageService {
     private let scanEngine = StorageScanEngine()
     private let installDetector = InstallSourceDetector()
     private let modelContext: ModelContext
+    private let logger = Logger(subsystem: "com.mac-storage-monitor", category: "StorageService")
     
     init(modelContext: ModelContext) {
         self.modelContext = modelContext
@@ -25,7 +27,7 @@ final class StorageService {
         // 全アプリスキャン
         let scannedApps = await scanEngine.scanAllApplications(installSourceDetector: installDetector)
         
-        print("[StorageService] スキャン結果: \(scannedApps.count) アプリ")
+        logger.info("Scan result: \(scannedApps.count) apps")
         
         // 既存レコードを取得
         let existingRecords = try modelContext.fetch(FetchDescriptor<AppStorageRecord>())
@@ -95,7 +97,7 @@ final class StorageService {
         // 保存
         try modelContext.save()
         
-        print("[StorageService] 保存完了: \(updatedRecords.count) レコード")
+        logger.info("Save completed: \(updatedRecords.count) records")
         
         return updatedRecords
     }
