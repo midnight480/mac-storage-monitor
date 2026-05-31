@@ -103,24 +103,29 @@ actor InstallSourceDetector {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: brewPath)
         process.arguments = ["list", "--cask"]
+        process.environment = [:]
         
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = Pipe()
         
         do {
-            let group = DispatchGroup()
-            group.enter()
-            process.terminationHandler = { _ in group.leave() }
-
             try process.run()
 
-            if group.wait(timeout: .now() + brewTimeout) == .timedOut {
+            // デッドロック防止: パイプの読み取りをプロセス終了待ちの前に実行
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+
+            // タイムアウト付きでプロセス終了を待機
+            let deadline = Date().addingTimeInterval(brewTimeout)
+            while process.isRunning && Date() < deadline {
+                Thread.sleep(forTimeInterval: 0.1)
+            }
+            if process.isRunning {
                 process.terminate()
                 return nil
             }
-            
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+
+            guard process.terminationStatus == 0 else { return nil }
             guard let output = String(data: data, encoding: .utf8) else { return nil }
             
             let casks = output
