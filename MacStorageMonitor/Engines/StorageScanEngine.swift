@@ -1,10 +1,12 @@
 import Foundation
+import os
 
 /// ファイルシステムスキャンエンジン
 /// アプリケーションの関連ファイルを検出し、サイズを集計する
 actor StorageScanEngine {
     
     private let fileManager = FileManager.default
+    private let logger = Logger(subsystem: "com.mac-storage-monitor", category: "StorageScanEngine")
     
     /// アプリ情報（スキャン結果の一時構造体）
     struct ScannedApp: Sendable {
@@ -29,17 +31,20 @@ actor StorageScanEngine {
     func scanAllApplications(installSourceDetector: InstallSourceDetector) async -> [ScannedApp] {
         let applicationsURL = URL(fileURLWithPath: "/Applications")
         
-        guard let contents = try? fileManager.contentsOfDirectory(
-            at: applicationsURL,
-            includingPropertiesForKeys: [.isDirectoryKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            print("[StorageScanEngine] /Applications/ の読み取りに失敗")
+        let contents: [URL]
+        do {
+            contents = try fileManager.contentsOfDirectory(
+                at: applicationsURL,
+                includingPropertiesForKeys: [.isDirectoryKey],
+                options: [.skipsHiddenFiles]
+            )
+        } catch {
+            logger.error("Failed to read /Applications/: \(error.localizedDescription)")
             return []
         }
         
         let appURLs = contents.filter { $0.pathExtension == "app" }
-        print("[StorageScanEngine] 検出アプリ数: \(appURLs.count)")
+        logger.info("Detected apps: \(appURLs.count)")
         
         var results: [ScannedApp] = []
         
@@ -49,7 +54,7 @@ actor StorageScanEngine {
             }
         }
         
-        print("[StorageScanEngine] スキャン完了アプリ数: \(results.count)")
+        logger.info("Scan completed: \(results.count) apps")
         return results
     }
     
@@ -147,13 +152,18 @@ actor StorageScanEngine {
     private func readBundleIdentifier(at appURL: URL) -> String? {
         let infoPlistURL = appURL.appendingPathComponent("Contents/Info.plist")
         
-        guard let data = try? Data(contentsOf: infoPlistURL),
-              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
-              let bundleID = plist["CFBundleIdentifier"] as? String else {
+        do {
+            let data = try Data(contentsOf: infoPlistURL)
+            guard let plist = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+                  let bundleID = plist["CFBundleIdentifier"] as? String else {
+                logger.debug("No CFBundleIdentifier in plist: \(infoPlistURL.path, privacy: .private)")
+                return nil
+            }
+            return bundleID
+        } catch {
+            logger.debug("Failed to read Info.plist at \(infoPlistURL.path, privacy: .private): \(error.localizedDescription)")
             return nil
         }
-        
-        return bundleID
     }
     
     /// 指定ディレクトリ内でバンドルIDまたはアプリ名に一致するフォルダを検索
@@ -195,11 +205,17 @@ actor StorageScanEngine {
         
         var results: [ScannedApp.RelatedFile] = []
         
-        guard let contents = try? fileManager.contentsOfDirectory(
-            at: prefsDir,
-            includingPropertiesForKeys: [.fileSizeKey],
-            options: [.skipsHiddenFiles]
-        ) else { return [] }
+        let contents: [URL]
+        do {
+            contents = try fileManager.contentsOfDirectory(
+                at: prefsDir,
+                includingPropertiesForKeys: [.fileSizeKey],
+                options: [.skipsHiddenFiles]
+            )
+        } catch {
+            logger.warning("Failed to read Preferences directory: \(error.localizedDescription)")
+            return []
+        }
         
         // バンドルIDで始まるファイルを検索
         let matchingFiles = contents.filter { url in
@@ -207,8 +223,13 @@ actor StorageScanEngine {
         }
         
         for file in matchingFiles {
-            if let size = try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize {
-                results.append(ScannedApp.RelatedFile(url: file, size: Int64(size), category: .preferences))
+            do {
+                let resourceValues = try file.resourceValues(forKeys: [.fileSizeKey])
+                if let size = resourceValues.fileSize {
+                    results.append(ScannedApp.RelatedFile(url: file, size: Int64(size), category: .preferences))
+                }
+            } catch {
+                logger.debug("Failed to get file size for \(file.path, privacy: .private): \(error.localizedDescription)")
             }
         }
         
@@ -226,20 +247,23 @@ actor StorageScanEngine {
         ) else { return 0 }
         
         for case let fileURL as URL in enumerator {
-            guard let resourceValues = try? fileURL.resourceValues(
-                forKeys: [.fileSizeKey, .isSymbolicLinkKey]
-            ) else {
+            do {
+                let resourceValues = try fileURL.resourceValues(
+                    forKeys: [.fileSizeKey, .isSymbolicLinkKey]
+                )
+                
+                // シンボリックリンクはスキップ
+                if resourceValues.isSymbolicLink == true {
+                    enumerator.skipDescendants()
+                    continue
+                }
+                
+                if let fileSize = resourceValues.fileSize {
+                    totalSize += Int64(fileSize)
+                }
+            } catch {
+                logger.debug("Failed to get resource values for \(fileURL.path, privacy: .private): \(error.localizedDescription)")
                 continue
-            }
-            
-            // シンボリックリンクはスキップ
-            if resourceValues.isSymbolicLink == true {
-                enumerator.skipDescendants()
-                continue
-            }
-            
-            if let fileSize = resourceValues.fileSize {
-                totalSize += Int64(fileSize)
             }
         }
         
@@ -247,7 +271,9 @@ actor StorageScanEngine {
     }
     
     /// ~/Library/ 配下のディレクトリURLを取得
+    /// - Parameter subdirectory: Library配下のサブディレクトリ名（パストラバーサル防止のため「..」を含む値は拒否）
     private func libraryURL(_ subdirectory: String) -> URL {
+        precondition(!subdirectory.contains(".."), "Path traversal detected in subdirectory: '\(subdirectory)'")
         let homeDir = fileManager.homeDirectoryForCurrentUser
         return homeDir.appendingPathComponent("Library/\(subdirectory)")
     }

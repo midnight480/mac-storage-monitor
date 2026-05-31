@@ -30,6 +30,10 @@
 "settings.general" = "General";
 "settings.launchAtLogin" = "Launch at Login";
 "settings.scanInterval" = "Scan Interval";
+"settings.language" = "Language";
+"settings.language.system" = "System";
+"settings.language.ja" = "日本語";
+"settings.language.en" = "English";
 
 /* Interval Presets */
 "interval.5min" = "5 min";

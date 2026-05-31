@@ -11,7 +11,7 @@ struct PopoverContentView: View {
             if showSettings {
                 SettingsView(
                     launchAtLogin: $viewModel.launchAtLogin,
-                    scanInterval: $viewModel.scanInterval,
+                    language: $viewModel.language,
                     onDismiss: { showSettings = false }
                 )
             } else if showOtherApps {

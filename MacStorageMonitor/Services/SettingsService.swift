@@ -10,6 +10,30 @@ final class SettingsService {
     private enum Keys {
         static let scanInterval = "scanInterval"
         static let launchAtLogin = "launchAtLogin"
+        static let language = "appLanguage"
+    }
+    
+    // MARK: - 言語設定
+    
+    /// サポートする言語
+    enum AppLanguage: String, CaseIterable {
+        case system = "system"
+        case ja = "ja"
+        case en = "en"
+    }
+    
+    /// アプリ内言語設定（デフォルト: system）
+    var language: AppLanguage {
+        get {
+            guard let raw = defaults.string(forKey: Keys.language),
+                  let lang = AppLanguage(rawValue: raw) else {
+                return .system
+            }
+            return lang
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.language)
+        }
     }
     
     // MARK: - デフォルト値
