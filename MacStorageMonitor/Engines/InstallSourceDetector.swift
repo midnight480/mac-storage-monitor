@@ -113,11 +113,20 @@ actor InstallSourceDetector {
         do {
             try process.run()
 
-            // デッドロック防止: パイプの読み取りをプロセス終了待ちの前に実行する
+            // デッドロック防止: パイプの読み取りをプロセス終了待ちの前に実行
             // パイプバッファが満杯になるとプロセスがブロックされるため
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
 
-            process.waitUntilExit()
+            // タイムアウト付きでプロセス終了を待機
+            let deadline = Date().addingTimeInterval(brewTimeout)
+            while process.isRunning && Date() < deadline {
+                Thread.sleep(forTimeInterval: 0.1)
+            }
+            if process.isRunning {
+                process.terminate()
+                return nil
+            }
+
             guard process.terminationStatus == 0 else { return nil }
             guard let output = String(data: data, encoding: .utf8) else { return nil }
             

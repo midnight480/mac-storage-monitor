@@ -67,13 +67,15 @@ enum L10n {
     
     // MARK: - Private
     
+    private static let settings = SettingsService()
+    
     private static func localized(_ key: String) -> String {
         let bundle = resolvedBundle()
         return NSLocalizedString(key, bundle: bundle, comment: "")
     }
     
     private static func resolvedBundle() -> Bundle {
-        let lang = SettingsService().language
+        let lang = settings.language
         switch lang {
         case .system:
             return .module
