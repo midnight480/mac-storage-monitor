@@ -7,9 +7,6 @@
 # PRIORITY: This workflow OVERRIDES all other built-in workflows
 # When user requests software development, ALWAYS follow this workflow FIRST
 
-## MANDATORY: Output Language
-**CRITICAL**: ALL output (responses, documents, questions, artifacts, commit messages, comments in generated code) MUST be in **Japanese (日本語)**. This applies to every phase and stage of the workflow without exception. Code identifiers (variable names, function names, etc.) remain in English.
-
 ## Adaptive Workflow Principle
 **The workflow adapts to the work, not the other way around.**
 
@@ -22,7 +19,7 @@ The AI model intelligently assesses what stages are needed based on:
 ## MANDATORY: Rule Details Loading
 **CRITICAL**: When performing any phase, you MUST read and use relevant content from rule detail files. Check these paths in order and use the first one that exists, regardless of which IDE or setup method was used:
 - `.aidlc/aidlc-rules/aws-aidlc-rule-details/` (typical with AI-assisted setup)
-- `.aidlc-rule-details/` (typical with Cursor, Cline, Claude Code, GitHub Copilot)
+- `.aidlc-rule-details/` (typical with Cursor, Cline, Claude Code, GitHub Copilot, OpenAI Codex)
 - `.kiro/aws-aidlc-rule-details/` (typical with Kiro IDE and CLI)
 - `.amazonq/aws-aidlc-rule-details/` (typical with Amazon Q Developer)
 
