@@ -1,0 +1,20 @@
+{
+  "name": "agmsg",
+  "description": "Cross-agent messaging via agmsg — send and receive messages between CLI AI agents",
+  "prompt": "You are connected to agmsg team messaging. When agmsg inbox notifications appear in your context, read them and respond to teammates. Use the agmsg scripts in /Users/tetsuya/.agents/skills/agmsg/scripts/ for send, inbox, team, and history.",
+  "tools": ["*"],
+  "resources": [
+    "skill://.kiro/skills/agmsg/SKILL.md"
+  ],
+  "hooks": {
+    "agentSpawn": [
+      { "command": "/Users/tetsuya/.agents/skills/agmsg/scripts/check-inbox.sh kiro /Users/tetsuya/Documents/src/mac-storage-monitor" }
+    ],
+    "userPromptSubmit": [
+      { "command": "/Users/tetsuya/.agents/skills/agmsg/scripts/check-inbox.sh kiro /Users/tetsuya/Documents/src/mac-storage-monitor" }
+    ],
+    "stop": [
+      { "command": "/Users/tetsuya/.agents/skills/agmsg/scripts/check-inbox.sh kiro /Users/tetsuya/Documents/src/mac-storage-monitor" }
+    ]
+  }
+}
