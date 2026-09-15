@@ -21,9 +21,19 @@
 | セキュリティテスト | - | N/A | Security Baseline 拡張は無効 |
 | 手動チェックリスト | 6 | 未実施 | `integration-test-instructions.md` 参照（ユーザー確認） |
 
+### ユーザー目視確認
+- ✅ Thaw 停止状態で、現行ビルドの「💽 NN%」が外部ディスプレイのメニューバーに表示される（2026-09-15 ユーザー確認）
+
+### 既知の問題（アプリ外）
+- **Thaw（メニューバー管理アプリ）起動中は表示されない**
+  - Thaw の設定（`MenuBarItemManager.savedSectionOrder`）上は `com.local.MacStorageMonitor:Mac Storage Monitor` が visible
+  - しかし macOS 27 では Thaw による再配置が `Position write declined ... synthetic drag disabled` で失敗し、項目が非表示区切りの左（画面外）に取り残される
+  - `NSStatusItem Preferred Position Item-0` を 450 に変更しても Thaw 起動中は改善せず
+  - Thaw を終了すると表示される。現在はユーザー判断で Thaw を停止中
+  - Thaw 側に古い識別子（`MacStorageMonitor:Item-0`, `com.local.MacStorageMonitor:Item-0`, `com.local.MacStorageMonitor:69%`）が残っており、整理すると改善する可能性あり（未検証）
+
 ### 未確認事項
 - ポップオーバーの表示内容の目視確認（画面共有中のためスクリーンショット確認を中止）
-- Thaw 上で表示セクションへ移動した後の表示確認（ユーザー操作が必要）
 
 ### 全体ステータス
 - **ビルド**: ✅ 成功

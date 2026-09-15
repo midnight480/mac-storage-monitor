@@ -97,3 +97,35 @@
 **Note**: 検証中に画面共有中の会議が映り込んだため、スクリーンショットは削除し以降の画面キャプチャを中止。
 
 ---
+
+## Build and Test - User Feedback
+**Timestamp**: 2026-09-15T13:50:00Z
+**User Input**: "アプリ起動していないです"
+**AI Response**: プロセスは起動中（PID 78911）と確認。AX 座標 (-670,58) で Thaw の非表示区切りより左（weight 583 > hiddenDividerWeight 573）に置かれ、Thaw の位置書き込みが declined。`NSStatusItem Preferred Position Item-0` を 450 に変更して再起動（PID 80048）し、表示確認を依頼。
+**Context**: Build and Test レビュー中の不具合報告
+
+---
+
+## Build and Test - User Response
+**Timestamp**: 2026-09-15T13:55:00Z
+**User Input**: "表示確認: どこにもない"
+**AI Response**: Thaw のログを再調査。
+**Context**: Build and Test レビュー中の不具合調査
+
+---
+
+## Build and Test - User Response
+**Timestamp**: 2026-09-15T14:00:00Z
+**User Input**: "Thaw終了: Claudeが終了、目視は自分"
+**AI Response**: Thaw を一時終了し、ユーザーの目視確認を待つ。
+**Context**: Thaw 起因かの再切り分け（現行ビルド）
+
+---
+
+## Build and Test - User Response
+**Timestamp**: 2026-09-15T14:05:00Z
+**User Input**: "表示確認: 見える / Thaw対応: Thawは止めたまま"
+**AI Response**: Thaw 終了時に現行ビルドが外部ディスプレイのメニューバーに表示されることをユーザーが目視確認。非表示の原因は Thaw（macOS 27 で項目の再配置が declined / synthetic drag disabled、Thaw 設定上は visible）と確定。ユーザー指示により Thaw は停止したままにする。build-and-test-summary.md に既知の問題として記録。
+**Context**: Build and Test レビュー中の不具合調査完了
+
+---
