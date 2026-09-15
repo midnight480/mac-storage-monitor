@@ -3,7 +3,7 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-05-29T10:00:00Z
-- **Current Stage**: CONSTRUCTION - Build and Test (完了・レビュー待ち)
+- **Current Stage**: COMPLETED（PR 作成済み）
 - **Feature**: macOS 27 メニューバー非表示の修正（Bug Fix）
 - **Branch**: fix/macos27-menubar-not-showing
 
