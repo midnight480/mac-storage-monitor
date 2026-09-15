@@ -49,6 +49,12 @@ open MacStorageMonitor.app
 
 > **Note**: コード署名の都合上、GitHub Actions でのビルド配布は行っていません。ローカルでビルドしてご利用ください。
 
+### メニューバーに表示されない場合（macOS 27 以降）
+
+- `swift build` で生成したバイナリをそのまま `.app` に詰めると、メニューバー上でアプリとして識別されません。必ず `./scripts/build-app.sh` で `.app` を生成してください（Info.plist を含めて ad-hoc 署名します）。
+- Thaw / Ice / Bartender などのメニューバー管理アプリを使っている場合、新しい項目が非表示セクションに入ることがあります。管理アプリの設定で「Mac Storage Monitor」を表示セクションに移動してください。
+- メニューバーの項目が多いと、macOS 標準の `«` に折りたたまれます。
+
 ## プロジェクト構成
 
 ```

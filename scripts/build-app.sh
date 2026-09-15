@@ -5,6 +5,8 @@
 set -e
 
 APP_NAME="MacStorageMonitor"
+BUNDLE_ID="com.local.MacStorageMonitor"
+RESOURCE_BUNDLE="${APP_NAME}_${APP_NAME}.bundle"
 BUILD_DIR=".build/release"
 APP_BUNDLE="${APP_NAME}.app"
 CONTENTS_DIR="${APP_BUNDLE}/Contents"
@@ -25,6 +27,9 @@ mkdir -p "${RESOURCES_DIR}"
 
 # バイナリをコピー
 cp "${BUILD_DIR}/${APP_NAME}" "${MACOS_DIR}/${APP_NAME}"
+
+# リソースバンドル（ローカライズ文字列）をコピー
+cp -R "${BUILD_DIR}/${RESOURCE_BUNDLE}" "${RESOURCES_DIR}/${RESOURCE_BUNDLE}"
 
 # Info.plist 作成
 cat > "${CONTENTS_DIR}/Info.plist" << 'PLIST'
@@ -57,6 +62,12 @@ cat > "${CONTENTS_DIR}/Info.plist" << 'PLIST'
 </dict>
 </plist>
 PLIST
+
+# ad-hoc 署名（Info.plist・リソースを署名に含め、識別子をバンドルIDに揃える）
+# linker 署名のままだと macOS 27 のメニューバーでアプリとして識別されない
+echo "🔏 署名中..."
+codesign --force --sign - --identifier "${BUNDLE_ID}" "${APP_BUNDLE}"
+codesign --verify --strict "${APP_BUNDLE}"
 
 echo "✅ ビルド完了: ${APP_BUNDLE}"
 echo ""

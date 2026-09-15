@@ -46,6 +46,11 @@ struct MacStorageMonitorApp: App {
                 Text("\(viewModel.diskUsagePercentage)%")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
             }
+            // macOS 27 ではラベル文字列（使用率）が項目の識別名になり、値が変わるたびに
+            // メニューバー管理アプリ（Thaw等）が別項目として扱うため、固定名を付与する
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Mac Storage Monitor")
+            .accessibilityValue("\(viewModel.diskUsagePercentage)%")
         }
         .menuBarExtraStyle(.window)
     }

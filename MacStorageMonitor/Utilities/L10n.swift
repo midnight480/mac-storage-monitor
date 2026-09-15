@@ -74,17 +74,28 @@ enum L10n {
         return NSLocalizedString(key, bundle: bundle, comment: "")
     }
     
+    /// リソースバンドル
+    /// .app 同梱（Contents/Resources）を優先し、`swift run` 時は Bundle.module にフォールバック
+    private static let resourceBundle: Bundle = {
+        if let url = Bundle.main.resourceURL?
+            .appendingPathComponent("MacStorageMonitor_MacStorageMonitor.bundle"),
+           let bundle = Bundle(url: url) {
+            return bundle
+        }
+        return .module
+    }()
+
     private static func resolvedBundle() -> Bundle {
         let lang = settings.language
         switch lang {
         case .system:
-            return .module
+            return resourceBundle
         case .ja, .en:
-            if let path = Bundle.module.path(forResource: lang.rawValue, ofType: "lproj"),
+            if let path = resourceBundle.path(forResource: lang.rawValue, ofType: "lproj"),
                let bundle = Bundle(path: path) {
                 return bundle
             }
-            return .module
+            return resourceBundle
         }
     }
 }

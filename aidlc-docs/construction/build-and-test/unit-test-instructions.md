@@ -91,3 +91,44 @@ swift test --filter FileSizeFormatterTests
 - StorageScanEngine と InstallSourceDetector はファイルシステムとプロセス実行に依存するため、統合テストとして扱う
 - SwiftData関連のテストはインメモリコンテナを使用する
 - UIテスト（View層）は手動確認で代替
+
+---
+
+## macos27-menubar-fix サイクル（2026-09-15）
+
+### テストターゲットの状況
+- `swift test` → `error: no tests found; create a target in the 'Tests' directory`
+- テストターゲット未作成のため、本サイクルの自動ユニットテストは N/A
+
+### 代替検証（コマンドで再現可能）
+
+#### 1. 同梱リソースバンドルからのローカライズ取得
+`.app` の `Contents/Resources` 配下のバンドルから ja/en の文字列が取れることを確認する。
+
+```bash
+cat > /tmp/bundlecheck.swift <<'SWIFT'
+import Foundation
+let app = Bundle(path: CommandLine.arguments[1])!
+let url = app.resourceURL!.appendingPathComponent("MacStorageMonitor_MacStorageMonitor.bundle")
+let b = Bundle(url: url)!
+for lang in ["ja", "en"] {
+  let lb = Bundle(path: b.path(forResource: lang, ofType: "lproj")!)!
+  print(lang, NSLocalizedString("disk.title", bundle: lb, comment: ""))
+}
+SWIFT
+swift /tmp/bundlecheck.swift "$PWD/MacStorageMonitor.app"
+```
+- **期待結果**: `ja ディスク使用状況` / `en Disk Usage`
+- **実行結果**: ✅ 期待どおり
+
+#### 2. アクセシビリティ名（項目識別名）の確認
+```bash
+osascript -e 'tell application "System Events" to tell process "MacStorageMonitor" to get every menu bar item of menu bar 2'
+```
+- **期待結果**: `menu bar item Mac Storage Monitor of menu bar 2 ...`
+- **実行結果**: ✅ 期待どおり（ターミナルにアクセシビリティ権限が必要）
+
+### 将来テストターゲットを追加する場合の候補
+| 対象 | テスト内容 |
+|---|---|
+| L10n のバンドル解決 | `Bundle.main.resourceURL` に同梱バンドルがある場合はそれを優先し、無い場合は `Bundle.module` を使う |
