@@ -3,8 +3,9 @@
 ## Project Information
 - **Project Type**: Brownfield
 - **Start Date**: 2026-05-29T10:00:00Z
-- **Current Stage**: COMPLETED (All phases done)
-- **Feature**: ログイン時自動起動ON/OFF設定の追加
+- **Current Stage**: CONSTRUCTION - Code Generation (完了・レビュー待ち)
+- **Feature**: macOS 27 メニューバー非表示の修正（Bug Fix）
+- **Branch**: fix/macos27-menubar-not-showing
 
 ## Execution Plan Summary
 - **Total Stages**: TBD
@@ -30,7 +31,14 @@
 - **Documentation**: aidlc-docs/ only
 - **Structure patterns**: See code-generation.md Critical Rules
 
-## Stage Progress
+## Stage Progress (Current Cycle: macOS 27 メニューバー非表示の修正)
+- [x] INCEPTION - Workspace Detection
+- [x] INCEPTION - Requirements Analysis (Minimal)
+- [x] INCEPTION - Workflow Planning (Minimal: User Stories / Application Design / Units / Functional Design / NFR / Infrastructure は SKIP — 単純なバグ修正のため)
+- [x] CONSTRUCTION - Code Generation
+- [ ] CONSTRUCTION - Build and Test
+
+## Previous Cycle Stage Progress (ログイン時自動起動ON/OFF設定の追加)
 - [x] INCEPTION - Workspace Detection
 - [x] INCEPTION - Requirements Analysis
 - [x] INCEPTION - Workflow Planning
