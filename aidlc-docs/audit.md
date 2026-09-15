@@ -73,3 +73,27 @@
 **User Input**: (なし)
 **AI Response**: 計画 Step 1〜5 を実施。build-app.sh で署名済み .app を生成し、Identifier/Info.plist バインド、同梱リソースからのローカライズ取得、MenuBarAgent での項目生成（isAllowed: true）を確認。README とコードサマリーを更新。ブランチ fix/macos27-menubar-not-showing にコミット。
 **Context**: CONSTRUCTION - Code Generation 完了
+
+---
+
+## Code Generation - User Approval
+**Timestamp**: 2026-09-15T13:20:00Z
+**User Input**: "次のステージに進んでください"
+**AI Response**: Code Generation を承認として記録し、Build and Test ステージを開始。
+**Context**: CONSTRUCTION - Build and Test 開始
+
+---
+
+## Build and Test Stage
+**Timestamp**: 2026-09-15T13:40:00Z
+**Build Status**: Success（クリーン release/debug ビルド 警告0・エラー0、build-app.sh 署名検証合格）
+**Test Status**: Pass（自動ユニットテスト N/A、コマンド代替検証 2/2、統合シナリオ 3/3、手動チェックリストはユーザー確認待ち）
+**Files Generated**:
+- build-instructions.md（.app ビルド・署名手順とトラブルシューティングを追記）
+- unit-test-instructions.md（本サイクルの代替検証を追記）
+- integration-test-instructions.md（macOS 27 シナリオ A〜C と手動チェックリストを追記）
+- performance-test-instructions.md（N/A）
+- build-and-test-summary.md（最新サイクルのサマリーを追記）
+**Note**: 検証中に画面共有中の会議が映り込んだため、スクリーンショットは削除し以降の画面キャプチャを中止。
+
+---

@@ -117,3 +117,41 @@ brew list --cask
 - [ ] スキャン中にプログレス表示される
 - [ ] スキャン間隔の変更が保存される
 - [ ] 終了ボタンでアプリが終了する
+
+---
+
+## macos27-menubar-fix サイクル（2026-09-15）
+
+### シナリオ A: 署名済み .app が MenuBarAgent にバンドルIDで登録される
+- **Setup**: `./scripts/build-app.sh`、既存プロセスを終了
+- **Test Steps**:
+  ```bash
+  T=$(date "+%Y-%m-%d %H:%M:%S"); open MacStorageMonitor.app; sleep 10
+  /usr/bin/log show --start "$T" --info --debug --style compact \
+    --predicate 'process == "MenuBarAgent" AND subsystem == "com.apple.menubar" AND (eventMessage CONTAINS "MacStorageMonitor" OR eventMessage CONTAINS "Creating status item")'
+  ```
+  （zsh では `log` がシェル組み込みコマンドと衝突するため `/usr/bin/log` を使う）
+- **Expected**: `Started to track application .bundle(com.local.MacStorageMonitor)` と `Creating status item ..., isAllowed: true`
+- **Result**: ✅
+
+### シナリオ B: メニューバー管理アプリ（Thaw）で安定した識別名になる
+- **Test Steps**:
+  ```bash
+  /usr/bin/log show --last 10m --info --style compact --predicate 'process == "Thaw" AND eventMessage CONTAINS "MacStorage"'
+  ```
+- **Expected**: 識別子が `com.local.MacStorageMonitor:Mac Storage Monitor`（使用率 `NN%` を含まない）
+- **Result**: ✅ `migrated saved entry com.local.MacStorageMonitor:69% to live identifier com.local.MacStorageMonitor:Mac Storage Monitor`
+
+### シナリオ C: ビルドディレクトリが無くても起動・操作できる
+- **Setup**: `.app` を別ディレクトリにコピーし、`.build/arm64-apple-macosx/release/MacStorageMonitor_MacStorageMonitor.bundle` を一時的にリネーム
+- **Test Steps**: コピーした `.app` を起動し、メニューバー項目をクリック（`osascript ... click menu bar item 1 of menu bar 2`）、プロセスが生存していることを確認、リネームを戻す
+- **Expected**: `could not load resource bundle` で落ちない
+- **Result**: ✅ クリック後もプロセス生存
+
+### 手動チェックリスト（macOS 27）
+- [ ] Thaw 等のメニューバー管理アプリ未使用時、メニューバーに 💽 + 使用率% が表示される
+- [ ] Thaw の設定一覧に「Mac Storage Monitor」が表示され、表示セクションへ移動できる
+- [ ] 使用率が変化しても Thaw 上の配置が維持される
+- [ ] ポップオーバーの文字列が設定言語（システム / 日本語 / English）で表示される
+- [ ] `/Applications` にコピーした `.app` でも同様に動作する
+- [ ] ログイン時自動起動 ON の状態で再ログイン後に表示される
